@@ -9,16 +9,18 @@ import (
 )
 
 type ChannelPool struct {
-	conn        *amqp.Connection
-	channels    chan *amqp.Channel
-	maxChannels int
+	conn           *amqp.Connection
+	channels       chan *amqp.Channel
+	maxChannels    int
+	shutdownSignal chan struct{}
 }
 
 func NewChannelPool(conn *amqp.Connection, maxChannels int) (*ChannelPool, error) {
 	pool := &ChannelPool{
-		conn:        conn,
-		channels:    make(chan *amqp.Channel, maxChannels),
-		maxChannels: maxChannels,
+		conn:           conn,
+		channels:       make(chan *amqp.Channel, maxChannels),
+		maxChannels:    maxChannels,
+		shutdownSignal: make(chan struct{}),
 	}
 
 	for i := 0; i < maxChannels; i++ {
@@ -40,6 +42,8 @@ func (p *ChannelPool) GetChannel() (*amqp.Channel, error) {
 		return channel, nil
 	case <-time.After(time.Second * 10):
 		return nil, fmt.Errorf("unable to acquire channel")
+	case <-p.shutdownSignal:
+		return nil, fmt.Errorf("shutdown in progress")
 	}
 }
 
@@ -52,4 +56,12 @@ func (p *ChannelPool) ReturnChannel(channel *amqp.Channel) {
 		channel.Close()
 	}
 
+}
+
+func (p *ChannelPool) Shutdown() {
+	close(p.shutdownSignal) // Signal all operations to shut down
+	for len(p.channels) > 0 {
+		channel := <-p.channels
+		channel.Close() // Close all channels in the pool
+	}
 }

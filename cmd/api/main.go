@@ -14,6 +14,7 @@ import (
 
 type application struct {
 	logger *slog.Logger
+	queues *queue.Queues
 }
 
 func main() {
@@ -42,6 +43,7 @@ func main() {
 		logger.Error("unable to create RabbitMQ channel pool", "error", err)
 		os.Exit(1)
 	}
+	defer mqPool.Shutdown()
 
 	c, err := mqPool.GetChannel()
 	if err != nil {
@@ -50,8 +52,15 @@ func main() {
 	}
 	defer mqPool.ReturnChannel(c)
 
+	queues, err := queue.NewQueues(mqPool)
+	if err != nil {
+		logger.Error("unable to create queues", "error", err)
+		os.Exit(1)
+	}
+
 	app := application{
 		logger: logger,
+		queues: queues,
 	}
 
 	slog.Info("creating server")
