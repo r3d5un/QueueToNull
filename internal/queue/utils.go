@@ -3,6 +3,7 @@ package queue
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -63,5 +64,27 @@ func (p *ChannelPool) Shutdown() {
 	for len(p.channels) > 0 {
 		channel := <-p.channels
 		channel.Close() // Close all channels in the pool
+	}
+}
+
+func ConsumeExampleWorkQueue(queue ExampleWorkQueue, done <-chan os.Signal) {
+	msgs, err := queue.GetMessages(false)
+	if err != nil {
+		fmt.Println("Error getting messages", "error", err)
+		return
+	}
+
+	for {
+		select {
+		case msg := <-msgs:
+			slog.Info("Received message", "body", string(msg.Body))
+			err := msg.Ack(false)
+			if err != nil {
+				slog.Error("Error acknowledging message", "error", err)
+			}
+		case <-done:
+			slog.Info("received shutdown signal")
+			return
+		}
 	}
 }
