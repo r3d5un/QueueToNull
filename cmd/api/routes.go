@@ -23,7 +23,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /api/v1/healthcheck", app.healthcheckHandler)
 
 	handlerList := RouteDefinitionList{
-		{"GET /api/v1/queue/hello_world", app.postHelloWorldMessageHandler},
+		{"POST /api/v1/queue/hello_world", app.postHelloWorldMessageHandler},
 	}
 
 	app.logger.Info("adding routes")
