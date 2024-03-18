@@ -6,6 +6,13 @@ import (
 	"github.com/justinas/alice"
 )
 
+type RouteDefinition struct {
+	Path    string
+	Handler http.HandlerFunc
+}
+
+type RouteDefinitionList []RouteDefinition
+
 func (app *application) routes() http.Handler {
 	app.logger.Info("creating multiplexer")
 	mux := http.NewServeMux()
@@ -14,6 +21,16 @@ func (app *application) routes() http.Handler {
 
 	app.logger.Info("adding healthcheck route")
 	mux.HandleFunc("GET /api/v1/healthcheck", app.healthcheckHandler)
+
+	handlerList := RouteDefinitionList{
+		{"GET /api/v1/queue/hello_world", app.postHelloWorldMessageHandler},
+	}
+
+	app.logger.Info("adding routes")
+	for _, d := range handlerList {
+		app.logger.Info("adding route", "route", d.Path)
+		mux.Handle(d.Path, standard.ThenFunc(d.Handler))
+	}
 
 	app.logger.Info("creating final handler")
 	handler := standard.Then(mux)
