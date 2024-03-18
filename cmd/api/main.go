@@ -37,26 +37,24 @@ func main() {
 		os.Exit(1)
 	}
 	defer conn.Close()
+	slog.Info("connected to RabbitMQ")
 
+	slog.Info("creating RabbitMQ channel pool")
 	mqPool, err := queue.NewChannelPool(conn, 10)
 	if err != nil {
 		logger.Error("unable to create RabbitMQ channel pool", "error", err)
 		os.Exit(1)
 	}
 	defer mqPool.Shutdown()
+	slog.Info("RabbitMQ channel pool created")
 
-	c, err := mqPool.GetChannel()
-	if err != nil {
-		logger.Error("unable to get channel from pool", "error", err)
-		os.Exit(1)
-	}
-	defer mqPool.ReturnChannel(c)
-
+	slog.Info("creating queues")
 	queues, err := queue.NewQueues(mqPool)
 	if err != nil {
 		logger.Error("unable to create queues", "error", err)
 		os.Exit(1)
 	}
+	slog.Info("queues created")
 
 	app := application{
 		logger: logger,
