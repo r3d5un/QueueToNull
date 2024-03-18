@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -55,6 +57,14 @@ func main() {
 		os.Exit(1)
 	}
 	slog.Info("queues created")
+
+	slog.Info("setting up background processes")
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
+
+	// Creating two consumers for demonstration purposes
+	go queue.ConsumeExampleWorkQueue(queues.ExampleWorkQueue, done)
+	go queue.ConsumeExampleWorkQueue(queues.ExampleWorkQueue, done)
 
 	app := application{
 		logger: logger,
