@@ -88,3 +88,47 @@ func ConsumeExampleWorkQueue(queue ExampleWorkQueue, done <-chan os.Signal) {
 		}
 	}
 }
+
+func ConsumeFanoutFirstQueue(queue FanoutExample, done <-chan os.Signal) {
+	msgs, err := queue.GetFirstQueueMessages(false)
+	if err != nil {
+		fmt.Println("Error getting messages", "error", err)
+		return
+	}
+
+	for {
+		select {
+		case msg := <-msgs:
+			slog.Info("Received message", "body", string(msg.Body))
+			err := msg.Ack(false)
+			if err != nil {
+				slog.Error("Error acknowledging message", "error", err)
+			}
+		case <-done:
+			slog.Info("received shutdown signal")
+			return
+		}
+	}
+}
+
+func ConsumeFanoutSecondQueue(queue FanoutExample, done <-chan os.Signal) {
+	msgs, err := queue.GetSecondQueueMessages(false)
+	if err != nil {
+		fmt.Println("Error getting messages", "error", err)
+		return
+	}
+
+	for {
+		select {
+		case msg := <-msgs:
+			slog.Info("Received message", "body", string(msg.Body))
+			err := msg.Ack(false)
+			if err != nil {
+				slog.Error("Error acknowledging message", "error", err)
+			}
+		case <-done:
+			slog.Info("received shutdown signal")
+			return
+		}
+	}
+}
