@@ -66,6 +66,10 @@ func main() {
 	go queue.ConsumeExampleWorkQueue(queues.ExampleWorkQueue, done)
 	go queue.ConsumeExampleWorkQueue(queues.ExampleWorkQueue, done)
 
+	// Creating consumers for messages posted to the fanout exchange
+	go queue.ConsumeFanoutFirstQueue(queues.FanoutExample, done)
+	go queue.ConsumeFanoutSecondQueue(queues.FanoutExample, done)
+
 	app := application{
 		logger: logger,
 		queues: queues,
