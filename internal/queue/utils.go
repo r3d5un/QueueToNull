@@ -70,7 +70,7 @@ func (p *ChannelPool) Shutdown() {
 func ConsumeExampleWorkQueue(queue ExampleWorkQueue, done <-chan os.Signal) {
 	msgs, err := queue.GetMessages(false)
 	if err != nil {
-		fmt.Println("Error getting messages", "error", err)
+		slog.Error("Error getting messages", "error", err)
 		return
 	}
 
@@ -92,14 +92,14 @@ func ConsumeExampleWorkQueue(queue ExampleWorkQueue, done <-chan os.Signal) {
 func ConsumeFanoutFirstQueue(queue FanoutExample, done <-chan os.Signal) {
 	msgs, err := queue.GetFirstQueueMessages(false)
 	if err != nil {
-		fmt.Println("Error getting messages", "error", err)
+		slog.Error("Error getting messages", "error", err)
 		return
 	}
 
 	for {
 		select {
 		case msg := <-msgs:
-			slog.Info("Received message", "body", string(msg.Body))
+			slog.Info("Received message", "body", string(msg.Body), "queue", "first")
 			err := msg.Ack(false)
 			if err != nil {
 				slog.Error("Error acknowledging message", "error", err)
@@ -114,14 +114,14 @@ func ConsumeFanoutFirstQueue(queue FanoutExample, done <-chan os.Signal) {
 func ConsumeFanoutSecondQueue(queue FanoutExample, done <-chan os.Signal) {
 	msgs, err := queue.GetSecondQueueMessages(false)
 	if err != nil {
-		fmt.Println("Error getting messages", "error", err)
+		slog.Error("Error getting messages", "error", err)
 		return
 	}
 
 	for {
 		select {
 		case msg := <-msgs:
-			slog.Info("Received message", "body", string(msg.Body))
+			slog.Info("Received message", "body", string(msg.Body), "queue", "second")
 			err := msg.Ack(false)
 			if err != nil {
 				slog.Error("Error acknowledging message", "error", err)
