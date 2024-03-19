@@ -25,6 +25,7 @@ func (app *application) routes() http.Handler {
 	handlerList := RouteDefinitionList{
 		{"POST /api/v1/queue/hello_world", app.postHelloWorldMessageHandler},
 		{"POST /api/v1/queue/example_work_queue", app.postExampleWorkQueueHandler},
+		{"POST /api/v1/queue/fanout_example", app.postFanoutExampleHandler},
 	}
 
 	app.logger.Info("adding routes")
